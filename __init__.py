@@ -64,14 +64,34 @@ def move_to_hassanki():
 
 def rename_tags():
     num_changed = 0
-    num_changed += mw.col.tags.rename("#BCM::Pharmacology", "#BCM::Term_3::Pharmacology").count
-    num_changed += mw.col.tags.rename("#BCM::IPBD", "#BCM::Term_3::IPBD").count
-    num_changed += mw.col.tags.rename("#BCM::Anatomy", "#BCM::Term_3::Anatomy").count
-    num_changed += mw.col.tags.rename("#BCM::Infectious_Disease", "#BCM::Term_4::Infectious_Disease").count
-    num_changed += mw.col.tags.rename("#BCM::Ethics", "#BCM::Term_4::Ethics").count
-    num_changed += mw.col.tags.rename("#BCM::Psych", "#BCM::Term_4::Psych").count
-    num_changed += mw.col.tags.rename("#BCM::Neuro", "#BCM::Term_4::Neuro").count
-    if num_changed > 0:
+    try:
+        rename_fn = mw.col.tags.rename
+    except AttributeError:
+        rename_fn = mw.col.tags.rename_tag
+
+    num_changed += rename_fn("#BCM::Pharmacology", "#BCM::Term_3::Pharmacology").count
+    num_changed += rename_fn("#BCM::IPBD", "#BCM::Term_3::IPBD").count
+    num_changed += rename_fn("#BCM::Anatomy", "#BCM::Term_3::Anatomy").count
+    num_changed += rename_fn("#BCM::Infectious_Disease", "#BCM::Term_4::Infectious_Disease").count
+    num_changed += rename_fn("#BCM::Ethics", "#BCM::Term_4::Ethics").count
+    num_changed += rename_fn("#BCM::Psych", "#BCM::Term_4::Psych").count
+    num_changed += rename_fn("#BCM::Neuro", "#BCM::Term_4::Neuro").count
+    num_changed += rename_fn("#BCM::Term_6", "#BCM::Term_6A").count
+    num_changed += rename_fn("#BCM::Term_7", "#BCM::Term_6B").count
+
+    changes_made = False
+    t6a_deck = mw.col.decks.by_name("HassAnki::Term 6")
+    if t6a_deck is not None:
+        t6a_deck["name"] = "HassAnki::Term 6A"
+        mw.col.decks.save(t6a_deck)
+        changes_made = True
+    t6b_deck = mw.col.decks.by_name("HassAnki::Term 7")
+    if t6b_deck is not None:
+        t6b_deck["name"] = "HassAnki::Term 6B"
+        mw.col.decks.save(t6b_deck)
+        changes_made = True
+
+    if num_changed > 0 or changes_made:
         showInfo("Renamed tags")
     else:
         showInfo("No tags to rename")
