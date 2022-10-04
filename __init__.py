@@ -1,7 +1,7 @@
 import re
 from aqt.utils import showInfo, qconnect
 from aqt.qt import QAction
-from aqt import mw
+from aqt import mw, gui_hooks
 
 def find_deck_startswith(start):
     decks = seq = mw.col.decks.all_names_and_ids()
@@ -96,6 +96,33 @@ def rename_tags():
     else:
         showInfo("No tags to rename")
 
+def add_dialog_option(menu, deck_id):
+    def move_to_deck():
+        deck = mw.col.decks.get(deck_id)
+        if deck['name'].startswith('HassAnki'):
+            tag_name = deck['name'].replace('HassAnki', '#BCM').replace(' ', '_')
+            cids = mw.col.find_cards('tag:'+tag_name)
+            if len(cids) > 0:
+                num_moved = 0
+                for cid in cids:
+                    card = mw.col.get_card(cid)
+                    if card.did != deck_id:
+                        num_moved += 1
+                        card.did = deck_id
+                    card.flush()
+                showInfo(f"Moved {num_moved} cards to {deck['name']}")
+            else:
+                showInfo('Could not find any cards. Check that the deck has the same name as the tag')
+                return
+        else:
+            showInfo("Deck must be in HassAnki")
+            return
+    
+    action4 = QAction("Move cards to deck", mw)
+    qconnect(action4.triggered, move_to_deck)
+    menu.addAction(action4)
+
+
 # create a new menu item, "test"
 action1 = QAction("Move To AnKing", mw)
 # set it to call testFunction when it's clicked
@@ -117,3 +144,5 @@ action3 = QAction("Rename Tags", mw)
 qconnect(action3.triggered, rename_tags)
 # and add it to the tools menu
 mw.form.menuTools.addAction(action3)
+
+gui_hooks.deck_browser_will_show_options_menu.append(add_dialog_option)
